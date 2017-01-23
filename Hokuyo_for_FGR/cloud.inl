@@ -54,7 +54,7 @@ void cloud<points>::sample()
 {
     pcl::UniformSampling<points> uniform_sampling;
     uniform_sampling.setInputCloud (cloud_in);
-    uniform_sampling.setRadiusSearch (0.2);
+    uniform_sampling.setRadiusSearch (0.03);
     std::cout << "before : " << cloud_in->size ()<<std::endl;
     uniform_sampling.filter (*cloud_in);
     std::cout << " after sampling : " << cloud_in->size () << std::endl<<std::endl;
@@ -86,17 +86,17 @@ void cloud<points>::clean()
 //    sor.setStddevMulThresh (1.0);
 //    sor.filter (*cloud_in);
 
-//    typename pcl::ConditionAnd<points>::Ptr condition (new pcl::ConditionAnd<points>);
-//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::LT, 3)));
-//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::LT, 3)));
-//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::LT, 3)));
-//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::GT, -3)));
-//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::GT, -3)));
-//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::GT, -3)));
+    typename pcl::ConditionAnd<points>::Ptr condition (new pcl::ConditionAnd<points>);
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::LT, 3)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::LT, 3)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::LT, 3)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::GT, -3)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::GT, -3)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::GT, -3)));
 
-//    pcl::ConditionalRemoval<points> filter (condition);
-//    filter.setInputCloud(cloud_in);
-//    filter.filter(*cloud_in);
+    pcl::ConditionalRemoval<points> filter (condition);
+    filter.setInputCloud(cloud_in);
+    filter.filter(*cloud_in);
 
     pcl::PassThrough<points> pass;
     pass.setInputCloud (cloud_in);
@@ -105,11 +105,11 @@ void cloud<points>::clean()
     pass.setFilterLimitsNegative (true);
     pass.filter (*cloud_in);
 
-//    pass.setInputCloud (cloud_in);
-//    pass.setFilterFieldName ("z");
-//    pass.setFilterLimits (50,50);
-//    pass.setFilterLimitsNegative (true);
-//    pass.filter (*cloud_in);
+    pass.setInputCloud (cloud_in);
+    pass.setFilterFieldName ("z");
+    pass.setFilterLimits (15,15);
+    pass.setFilterLimitsNegative (true);
+    pass.filter (*cloud_in);
 }
 
 template<typename points>
