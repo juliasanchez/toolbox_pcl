@@ -6,16 +6,13 @@ cloud<points>::cloud()
 template<typename points>
 void cloud<points>::getScale(float* Volume)
 {
-	points minPt, maxPt;
-	pcl::getMinMax3D (*cloud_in, minPt, maxPt);
-  float dist_x=maxPt.x-minPt.x;
-  float dist_y=maxPt.y-minPt.y;
-  float dist_z=maxPt.z-minPt.z;
-
-	Eigen::Matrix4f scaling= Eigen::Matrix4f::Identity();
-	//float resize=max(   (maxPt.x-minPt.x),   (maxPt.y-minPt.y),    (maxPt.z-minPt.z)     );
-	//transformation*float(1/resize);
-	*Volume= dist_x*dist_y*dist_z;
+    points minPt, maxPt;
+    pcl::getMinMax3D (*cloud_in, minPt, maxPt);
+    float dist_x=maxPt.x-minPt.x;
+    float dist_y=maxPt.y-minPt.y;
+    float dist_z=maxPt.z-minPt.z;
+    Eigen::Matrix4f scaling= Eigen::Matrix4f::Identity();
+    *Volume= dist_x*dist_y*dist_z;
 }
 
 
@@ -34,12 +31,12 @@ void cloud<points>::getInputCloud(typename pcl::PointCloud<points>::Ptr cloudout
 template<typename points>
 void cloud<points>::getNormals(float radius, typename pcl::PointCloud<pcl::Normal>::Ptr normals)
 {
-	pcl::NormalEstimationOMP<points, pcl::Normal> normal_estimation;
+        pcl::NormalEstimationOMP<points, pcl::Normal> normal_estimation;
 	normal_estimation.setSearchMethod(typename pcl::search::KdTree<points>::Ptr(new pcl::search::KdTree<points>));
 	normal_estimation.setRadiusSearch(radius);
-	normal_estimation.setViewPoint (std::numeric_limits<float>::max (), std::numeric_limits<float>::max (), std::numeric_limits<float>::max ());
+        normal_estimation.setViewPoint (0, 0, 0);
 	normal_estimation.setInputCloud(cloud_in);
-	normal_estimation.compute(*normals);
+        normal_estimation.compute(*normals);
 }
 
 template<typename points>
@@ -50,11 +47,11 @@ void cloud<points>::getTree(typename pcl::search::KdTree<points>::Ptr &tree_out)
 }
 
 template<typename points>
-void cloud<points>::sample()
+void cloud<points>::sample(float samp)
 {
     pcl::UniformSampling<points> uniform_sampling;
     uniform_sampling.setInputCloud (cloud_in);
-    uniform_sampling.setRadiusSearch (0.03);
+    uniform_sampling.setRadiusSearch (samp);
     std::cout << "before : " << cloud_in->size ()<<std::endl;
     uniform_sampling.filter (*cloud_in);
     std::cout << " after sampling : " << cloud_in->size () << std::endl<<std::endl;
@@ -78,21 +75,18 @@ void cloud<points>::load(std::string pcd_file)
 template<typename points>
 void cloud<points>::clean()
 {
+    std::cout << "before cleaning : " << cloud_in->size ()<<std::endl;
+
     std::vector<int> indices;
     pcl::removeNaNFromPointCloud(*cloud_in, *cloud_in, indices);
-//    pcl::StatisticalOutlierRemoval<points> sor;
-//    sor.setInputCloud (cloud_in);
-//    sor.setMeanK (50);
-//    sor.setStddevMulThresh (1.0);
-//    sor.filter (*cloud_in);
 
     typename pcl::ConditionAnd<points>::Ptr condition (new pcl::ConditionAnd<points>);
-    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::LT, 3)));
-    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::LT, 3)));
-    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::LT, 3)));
-    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::GT, -3)));
-    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::GT, -3)));
-    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::GT, -3)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::LT, 30)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::LT, 30)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::LT, 30)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::GT, -30)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::GT, -30)));
+    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::GT, -30)));
 
     pcl::ConditionalRemoval<points> filter (condition);
     filter.setInputCloud(cloud_in);
@@ -105,11 +99,8 @@ void cloud<points>::clean()
     pass.setFilterLimitsNegative (true);
     pass.filter (*cloud_in);
 
-    pass.setInputCloud (cloud_in);
-    pass.setFilterFieldName ("z");
-    pass.setFilterLimits (15,15);
-    pass.setFilterLimitsNegative (true);
-    pass.filter (*cloud_in);
+    std::cout << " after cleaning : " << cloud_in->size () << std::endl<<std::endl;
+
 }
 
 template<typename points>
@@ -140,4 +131,10 @@ double cloud<points>::computeCloudResolution ()
     res /= n_points;
   }
   return res;
+}
+
+template<typename points>
+void cloud<points>::transform( Eigen::Matrix4f matrix_transform)
+{
+    pcl::transformPointCloud (*cloud_in, *cloud_in, matrix_transform);
 }

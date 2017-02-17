@@ -1,13 +1,12 @@
-//ROUTINE TO REGISTER 2 POINTCLOUDS
+//ROUTINE TO TRANSFORM 1 POINTCLOUD
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
-#include "/home/julia/Desktop/toolbox_pcl/display/display_clouds.h"
+#include <pcl/common/transforms.h>
 
 // PCL INCLUDES
 
-using pcl::transformPointCloud;
 typedef pcl::PointXYZI pcl_point;
 
 //...............................................................................................................................
@@ -22,28 +21,28 @@ int main(int argc, char** argv)
     Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
 
     // Define a rotation matrix (see https://en.wikipedia.org/wiki/Rotation_matrix)
-    float theta = atof(argv[2]); // The angle of rotation in radians
-    transform (0,0) = cos (theta);
-    transform (0,1) = -sin(theta);
-    transform (1,0) = sin (theta);
-    transform (1,1) = cos (theta);
+    float theta =  atof(argv[2]); // The angle of rotation in radians
+    float phi=  atof(argv[3]); // The angle of rotation in radians
+    transform_theta (0,0) = cos (theta);
+    transform_theta (0,1) = -sin(theta);
+    transform_theta (1,0) = sin (theta);
+    transform_theta (1,1) = cos (theta);
 
-    // Define a translation of 2.5 meters on the x axis.
-    transform (0,3) = atof(argv[3]);
+    transform_phi (0,0) = cos (phi);
+    transform_phi (0,2) = sin(phi);
+    transform_phi (2,0) = -sin(phi);
+    transform_phi (2,2) = cos(phi);
+
 
     // Print the transformation
-    std::cout << transform << std::endl;
+    std::cout << transform_theta*transform_phi << std::endl;
 
     pcl::PointCloud<pcl_point>::Ptr transformed_cloud(new pcl::PointCloud<pcl_point>);
 
-    pcl::transformPointCloud (*cloud, *transformed_cloud, transform);
+    pcl::transformPointCloud (*cloud, *transformed_cloud, transform_theta*transform_phi);
 
-    std::cerr << "Number of points cloud" << cloud->size() << std::endl;
-    std::cerr << "Number of points transformed_cloud" << transformed_cloud->size() << std::endl;
-
-    int color1[3]={20,230,20};
-    int color2[3]={20,20,230};
-    display_clouds(cloud, transformed_cloud, color1, color2, 1, 1);
+    std::cerr << "Number of points cloud : " << cloud->size() << std::endl;
+    std::cerr << "Number of points transformed_cloud : " << transformed_cloud->size() << std::endl;
 
     pcl::io::savePCDFileASCII ("transformed_cloud.pcd", *transformed_cloud);
 

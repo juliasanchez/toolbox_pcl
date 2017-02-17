@@ -37,7 +37,7 @@ void cloud<points>::getNormals(float radius, typename pcl::PointCloud<pcl::Norma
 	pcl::NormalEstimationOMP<points, pcl::Normal> normal_estimation;
 	normal_estimation.setSearchMethod(typename pcl::search::KdTree<points>::Ptr(new pcl::search::KdTree<points>));
 	normal_estimation.setRadiusSearch(radius);
-
+	normal_estimation.setViewPoint (std::numeric_limits<float>::max (), std::numeric_limits<float>::max (), std::numeric_limits<float>::max ());
 	normal_estimation.setInputCloud(cloud_in);
 	normal_estimation.compute(*normals);
 }
