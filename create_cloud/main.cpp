@@ -1,7 +1,7 @@
 #include <iostream>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
-#include "/home/julia/Desktop/toolbox_pcl/display/display_clouds.h"
+#include "/home/julia/Desktop/my_programs/toolbox_pcl/display/display_clouds.h"
 
 int main (int argc, char** argv)
 {
@@ -19,14 +19,15 @@ int main (int argc, char** argv)
     if(test>50)
     {
     cloud->points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
-    cloud->points[i].y = 1024 * rand () / (RAND_MAX + 1.0f);
-    cloud->points[i].z = 2;
+    cloud->points[i].z = 1024 * rand () / (RAND_MAX + 1.0f);
+    cloud->points[i].y = 0;
     }
     else
     {
-        cloud->points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
-        cloud->points[i].y = 1;
-        cloud->points[i].z = 1+1024 * rand () / (RAND_MAX + 1.0f);
+        cloud->points[i].z = (1024 * rand () / (RAND_MAX + 1.0f));
+        float fix=cos(M_PI/3)*(1024 * rand () / (RAND_MAX + 1.0f));
+        cloud->points[i].x = -cos(M_PI/3)-fix;
+        cloud->points[i].y = sin(M_PI/3)-fix*tan(M_PI/3);
     }
   }
 

@@ -1,4 +1,5 @@
-project(bins_for_FGR)
-cmake_minimum_required(VERSION 2.8)
-aux_source_directory(. SRC_LIST)
-add_executable(${PROJECT_NAME} ${SRC_LIST})
+cmake_minimum_required(VERSION 2.8.11)
+
+project (bins_for_FGR)
+
+add_executable(bins_for_FGR main.cpp)
