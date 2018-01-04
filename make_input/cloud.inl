@@ -90,7 +90,7 @@ void cloud<points>::clean(float thresh)
 //    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::LT, 20)));
 //    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::LT, 20)));
 //    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::LT, 20)));
-//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::GT, -thresh)));
+//    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("x", pcl::ComparisonOps::GT, -20)));
 //    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("y", pcl::ComparisonOps::GT, -20)));
 //    condition->addComparison(typename pcl::FieldComparison<points>::ConstPtr(new typename pcl::FieldComparison<points>("z", pcl::ComparisonOps::GT, -20)));
     filter_far(cloud_in, thresh);

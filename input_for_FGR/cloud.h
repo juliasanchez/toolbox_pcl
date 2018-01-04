@@ -18,6 +18,7 @@
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/random_sample.h>
+#include "filter_far.h"
 
 #if defined _MSC_VER
 #pragma warning (disable: 4996) // MT
@@ -28,23 +29,22 @@ class cloud
 {
 public:
 	cloud();
-	void setInputCloud(typename pcl::PointCloud<points>::Ptr&);
+        void setInputCloud(typename pcl::PointCloud<points>::Ptr);
         void setTree();
         void getScale(float*);
-	void clean();
+        void clean(float far);
 	void getInputCloud(typename pcl::PointCloud<points>::Ptr);
-        void getNormals(float, typename pcl::PointCloud<pcl::Normal>::Ptr);
-	void getSize(int*);
+        void getNormals(float, typename pcl::PointCloud<pcl::Normal>::Ptr) const;
+        void getSize(int*) const;
 	void load (std::string);
-	double computeCloudResolution ();
+        double computeCloudResolution () const;
         void sample(float samp);
         void rand_sample(float samp);
         void transform( Eigen::Matrix4f matrix_transform);
 
 
 private:
-	typename pcl::PointCloud<points>::Ptr cloud_in;  //(new pcl::PointCloud<points>);
-	int size;
+        typename pcl::PointCloud<points>::Ptr cloud_in;
 	typename pcl::search::KdTree<points> tree;
 };
 

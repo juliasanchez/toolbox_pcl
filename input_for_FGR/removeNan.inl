@@ -1,11 +1,11 @@
-void removeNan(pcl::PointCloud<pcl_point>::Ptr cloud, pcl::PointCloud<pcl::UniqueShapeContext1960>::Ptr features)
+void removeNan(pcl::PointCloud<pcl_point>::Ptr cloud, pcl::PointCloud<pcl::FPFHSignature33>::Ptr features)
 {
     pcl::PointCloud<pcl_point>::Ptr cloud_temp(new pcl::PointCloud<pcl_point>);
-     pcl::PointCloud<pcl::UniqueShapeContext1960>::Ptr feat_temp (new pcl::PointCloud<pcl::UniqueShapeContext1960>);
+    pcl::PointCloud<pcl::FPFHSignature33>::Ptr feat_temp (new pcl::PointCloud<pcl::FPFHSignature33>);
 
     for (int i=0; i<features->points.size(); i++)
     {
-        if(features->points[i].descriptor[0]==features->points[i].descriptor[0])
+        if(features->points[i].histogram[0]==features->points[i].histogram[0])
         {
             feat_temp->points.push_back(features->points[i]);
             cloud_temp->points.push_back(cloud->points[i]);

@@ -9,7 +9,7 @@ void pre_process(std::string pcd_file,float sample, float normal_radius, float f
     auto t_tot2= std::chrono::high_resolution_clock::now();
     std::cout<<"total time to load clouds :" <<std::chrono::duration_cast<std::chrono::milliseconds>(t_tot2-t_tot1).count()<<" milliseconds"<<std::endl<<std::endl;
     std::cout << " input cloud number of points : " << cloud_in->size () << std::endl;
-    cloud_src.sample(0.005);
+    cloud_src.sample(0.01);
     std::cout << " after first sampling 5mm : " << cloud_in->size () << std::endl;
     cloud_src.clean(far);
     std::cout << " after cleaning : " << cloud_in->size () << std::endl;

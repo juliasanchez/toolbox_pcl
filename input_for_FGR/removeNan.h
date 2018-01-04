@@ -5,7 +5,7 @@
 
 typedef pcl::PointXYZ pcl_point;
 
-void removeNan(pcl::PointCloud<pcl_point>::Ptr cloud, pcl::PointCloud<pcl::UniqueShapeContext1960>::Ptr features);
+void removeNan(pcl::PointCloud<pcl_point>::Ptr cloud, pcl::PointCloud<pcl::FPFHSignature33>::Ptr features);
 
 #include "removeNan.inl"
 

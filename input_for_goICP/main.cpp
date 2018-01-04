@@ -45,16 +45,20 @@ int main(int argc, char *argv[])
 
     float samp=atof(argv[3]);
 
-    pcl::UniformSampling<pcl_point> uniform_sampling;
-    uniform_sampling.setInputCloud (cloud1);
-    uniform_sampling.setRadiusSearch (samp);
-    std::cout << "before : " << cloud1->size ()<<std::endl;
-    uniform_sampling.filter (*cloud1);
-    std::cout << " after sampling : " << cloud1->size () << std::endl<<std::endl;
-    uniform_sampling.setInputCloud (cloud2);
-    std::cout << "before : " << cloud2->size ()<<std::endl;
-    uniform_sampling.filter (*cloud2);
-    std::cout << " after sampling : " << cloud2->size () << std::endl<<std::endl;
+    if(samp != 0)
+    {
+
+        pcl::UniformSampling<pcl_point> uniform_sampling;
+        uniform_sampling.setInputCloud (cloud1);
+        uniform_sampling.setRadiusSearch (samp);
+        std::cout << "before : " << cloud1->size ()<<std::endl;
+        uniform_sampling.filter (*cloud1);
+        std::cout << " after sampling : " << cloud1->size () << std::endl<<std::endl;
+        uniform_sampling.setInputCloud (cloud2);
+        std::cout << "before : " << cloud2->size ()<<std::endl;
+        uniform_sampling.filter (*cloud2);
+        std::cout << " after sampling : " << cloud2->size () << std::endl<<std::endl;
+    }
 
     Eigen::Vector4f centroid;
     pcl::compute3DCentroid (*cloud1, centroid);
@@ -73,30 +77,41 @@ int main(int argc, char *argv[])
         cloud2->points[i].z=cloud2->points[i].z-centroid(2);
     }
 
+    std::vector<float> maxvec (12);
     pcl_point point_min;
     pcl_point point_max;
     pcl::getMinMax3D(*cloud1, point_min, point_max);
-    float maxi_x1=std::max(abs(point_max.x), abs(point_min.x));
-    float maxi_y1=std::max(abs(point_max.y), abs(point_min.y));
-    float maxi_z1=std::max(abs(point_max.z), abs(point_min.z));
+
+    maxvec[0]=abs(point_max.x);
+    maxvec[1]=abs(point_max.y);
+    maxvec[2]=abs(point_max.z);
+
+    maxvec[6]=abs(point_min.x);
+    maxvec[7]=abs(point_min.y);
+    maxvec[8]=abs(point_min.z);
 
     pcl::getMinMax3D(*cloud2, point_min, point_max);
-    float maxi_x2=std::max(abs(point_max.x), abs(point_min.x));
-    float maxi_y2=std::max(abs(point_max.y), abs(point_min.y));
-    float maxi_z2=std::max(abs(point_max.z), abs(point_min.z));
+    maxvec[3]=abs(point_max.x);
+    maxvec[4]=abs(point_max.y);
+    maxvec[5]=abs(point_max.z);
+    maxvec[9]=abs(point_min.x);
+    maxvec[10]=abs(point_min.y);
+    maxvec[11]=abs(point_min.z);
+
+    float scale =*max_element(maxvec.begin(), maxvec.end());
 
     for(int i=0; i<cloud1->size(); i++)
     {
-        cloud1->points[i].x=cloud1->points[i].x/std::max(maxi_x1, maxi_x2);
-        cloud1->points[i].y=cloud1->points[i].y/std::max(maxi_y1, maxi_y2);
-        cloud1->points[i].z=cloud1->points[i].z/std::max(maxi_z1, maxi_z2);
+        cloud1->points[i].x=cloud1->points[i].x/scale;
+        cloud1->points[i].y=cloud1->points[i].y/scale;
+        cloud1->points[i].z=cloud1->points[i].z/scale;
     }
 
     for(int i=0; i<cloud2->size(); i++)
     {
-        cloud2->points[i].x=cloud2->points[i].x/std::max(maxi_x1, maxi_x2);
-        cloud2->points[i].y=cloud2->points[i].y/std::max(maxi_y1, maxi_y2);
-        cloud2->points[i].z=cloud2->points[i].z/std::max(maxi_z1, maxi_z2);
+        cloud2->points[i].x=cloud2->points[i].x/scale;
+        cloud2->points[i].y=cloud2->points[i].y/scale;
+        cloud2->points[i].z=cloud2->points[i].z/scale;
     }
 
     pcl::io::savePCDFileASCII ("scaled_cloud.pcd", *cloud1);

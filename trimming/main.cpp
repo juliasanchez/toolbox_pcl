@@ -1,16 +1,15 @@
 //ROUTINE TO REGISTER 2 POINTCLOUDS
 
-#include "/home/julia/Desktop/toolbox_pcl/display/display_clouds.h"
 #include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
+#include <pcl/filters/uniform_sampling.h>
 
 // PCL INCLUDES
 
-using pcl::transformPointCloud;
-typedef pcl::PointXYZI pcl_point;
+typedef pcl::PointXYZ pcl_point;
 
 //...............................................................................................................................
 
@@ -26,6 +25,11 @@ int main(int argc, char** argv)
     std::vector<int> indices;
     pcl::removeNaNFromPointCloud(*cloud, *cloud, indices);
 
+    pcl::UniformSampling<pcl_point> uniform_sampling;
+    uniform_sampling.setInputCloud (cloud);
+    uniform_sampling.setRadiusSearch (0.005);
+    uniform_sampling.filter (*cloud);
+
     //trimming
 
     typename pcl::ConditionAnd<pcl_point>::Ptr condition (new pcl::ConditionAnd<pcl_point>);
@@ -40,10 +44,6 @@ int main(int argc, char** argv)
     pcl::ConditionalRemoval<pcl_point> filter (condition);
     filter.setInputCloud(cloud);
     filter.filter(*cloud);
-
-
-    int color[3]={20,230,20};
-    display_clouds(cloud, cloud, color, color, 1, 1);
 
     pcl::io::savePCDFileASCII ("trimming.pcd", *cloud);
 

@@ -2,82 +2,98 @@
 #include <string>
 #include <pcl/features/fpfh_omp.h>
 #include <pcl/filters/extract_indices.h>
-
+#include <chrono>
 #include "pre_process.h"
-#include "pcn2n.h"
-#include "pcn2pc.h"
-#include "n2pc.h"
-#include "filter_normals.h"
-#include "getFeature_usc.h"
-#include "removeNan.h"
+
+#include "cloud.h"
 
 typedef pcl::PointXYZ pcl_point;
 
 int main(int argc, char *argv[])
 {
-
-    std::string pcd_file1( argv[1] );
+    std::stringstream sstm;
+    sstm.str("");
+//    sstm<<"/home/julia/Documents/data_base/leica/pcd/sampled/1_04cm/SW";
+//    sstm <<argv[1]<<".pcd";
+//    std::string file_address = sstm.str();
 
     pcl::PointCloud<pcl_point>::Ptr cloud_in(new pcl::PointCloud<pcl_point>);
     pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
 
     Eigen::Matrix4f transform_init = Eigen::Matrix4f::Identity();
-    pre_process(pcd_file1, 50000, 0, cloud_in, transform_init, normals);
+
+    float sample =atof(argv[2]);
+    float normal_radius=atof(argv[3]);
+    double reso1;
+    double reso2;
+    pre_process(argv[1],sample, normal_radius, atof(argv[4]), cloud_in, transform_init, normals, &reso1);
 
     pcl::PointCloud<pcl::PointNormal>::Ptr pointNormals(new pcl::PointCloud<pcl::PointNormal>);
+
     pcl::concatenateFields (*cloud_in, *normals, *pointNormals);
 
     std::vector<int> indices;
     pcl::removeNaNNormalsFromPointCloud(*pointNormals, *pointNormals, indices);
 
-    pcn2pc(pointNormals, cloud_in);
-    pcn2n(pointNormals, normals);
 
-    if( atoi(argv[2]))
+    cloud_in->width    = pointNormals->points.size();
+    cloud_in->height   = 1;
+    cloud_in->is_dense = false;
+    cloud_in->points.resize (pointNormals->points.size());
 
+    normals->width    = pointNormals->points.size();
+    normals->height   = 1;
+    normals->is_dense = false;
+    normals->points.resize (pointNormals->points.size());
+
+
+    for (int i=0; i<cloud_in->points.size(); i++)
     {
-        pcl::PointCloud<pcl_point>::Ptr normals_pc(new pcl::PointCloud<pcl_point>);
-        n2pc(normals, normals_pc);
-
-        float radius =0.07;
-        float perc=0.02;
-        pcl::PointIndices::Ptr removed_indices (new pcl::PointIndices());
-        filter_normals(normals_pc, radius, perc, removed_indices);
-
-        pcl::ExtractIndices<pcl_point> eifilter (true);
-        eifilter.setNegative (true);
-        eifilter.setInputCloud (cloud_in);
-        eifilter.setIndices (removed_indices);
-        eifilter.filter (*cloud_in);
-
-        pcl::ExtractIndices<pcl::Normal> eifilter_n (true);
-        eifilter_n.setNegative (true);
-        eifilter_n.setInputCloud (normals);
-        eifilter_n.setIndices (removed_indices);
-        eifilter_n.filter (*normals);
+        cloud_in->points[i].x=pointNormals->points[i].x;
+        cloud_in->points[i].y=pointNormals->points[i].y;
+        cloud_in->points[i].z=pointNormals->points[i].z;
     }
 
-    pcl::io::savePCDFileASCII ("cloud.pcd", *cloud_in);
-    pcl::io::savePCDFileASCII ("normals.pcd", *normals);
+    for (int i=0; i<cloud_in->points.size(); i++)
+    {
+        normals->points[i].normal_x=pointNormals->points[i].normal_x;
+        normals->points[i].normal_y=pointNormals->points[i].normal_y;
+        normals->points[i].normal_z=pointNormals->points[i].normal_z;
+    }
 
-    float feature_radius_= atof(argv[3]);
+    auto t_tot1 = std::chrono::high_resolution_clock::now();
 
-//    pcl::FPFHEstimationOMP<pcl_point, pcl::Normal, pcl::FPFHSignature33> fest;
-//    pcl::PointCloud<pcl::FPFHSignature33>::Ptr cloud_features(new pcl::PointCloud<pcl::FPFHSignature33>());
-//    fest.setRadiusSearch(feature_radius_);
-//    fest.setInputCloud(cloud_in);
-//    fest.setInputNormals(normals);
-//    fest.compute(*cloud_features);
+    float feature_radius_= atof(argv[5]);
+    pcl::FPFHEstimationOMP<pcl_point, pcl::Normal, pcl::FPFHSignature33> fest;
+    pcl::PointCloud<pcl::FPFHSignature33>::Ptr cloud_features(new pcl::PointCloud<pcl::FPFHSignature33>());
+    fest.setRadiusSearch(feature_radius_);
+    fest.setInputCloud(cloud_in);
+    fest.setInputNormals(normals);
+    fest.compute(*cloud_features);
 
-    pcl::PointCloud<pcl::UniqueShapeContext1960>::Ptr cloud_features(new pcl::PointCloud<pcl::UniqueShapeContext1960>);
-    getFeature_usc(cloud_in, feature_radius_, cloud_features);
+    auto t_tot2 = std::chrono::high_resolution_clock::now();
+    std::cout<<"total time :" <<std::chrono::duration_cast<std::chrono::milliseconds>(t_tot2-t_tot1).count()<<" milliseconds"<<std::endl<<std::endl;
 
-    removeNan(cloud_in,cloud_features);
+    sstm.str("");
+    sstm<<"mkdir "<<argv[6];
+    std::string command = sstm.str();
+    const char* c=command.c_str();
+    system(c);
 
-    FILE* fid = fopen("features.bin", "wb");
-    int nV = cloud_in->size();
-//    int nDim = 33;
-    int nDim=1960;
+
+    sstm.str("");
+
+//    sstm<< argv[5]<<"/scan";
+//    sstm <<i<<"00.bin";
+
+//    sstm<< argv[5]<<"/Hokuyo_";
+//    sstm <<i<<".bin";
+    sstm<< argv[6]<<"/corner.bin";
+    std::string file_address = sstm.str();
+    const char *features_file(file_address.c_str());
+
+    FILE* fid = fopen(features_file, "wb");
+    int nV = cloud_in->size(), nDim = 33;
     fwrite(&nV, sizeof(int), 1, fid);
     fwrite(&nDim, sizeof(int), 1, fid);
     for (int v = 0; v < nV; v++)
@@ -85,10 +101,15 @@ int main(int argc, char *argv[])
         const pcl_point &pt = cloud_in->points[v];
         float xyz[3] = {pt.x, pt.y, pt.z};
         fwrite(xyz, sizeof(float), 3, fid);
-//        const pcl::FPFHSignature33 &feature = cloud_features->points[v];
-//        fwrite(feature.histogram, sizeof(float), nDim, fid);
-        const pcl::UniqueShapeContext1960 &feature = cloud_features->points[v];
-        fwrite(feature.descriptor, sizeof(float), nDim, fid);
+        const pcl::FPFHSignature33 &feature = cloud_features->points[v];
+        fwrite(feature.histogram, sizeof(float), 33, fid);
     }
     fclose(fid);
+
+//     sstm.str("");
+//     sstm<<i<<".time";
+//    std::ofstream fout(sstm.str());
+//    fout<<std::chrono::duration_cast<std::chrono::milliseconds>(t_tot2-t_tot1).count();
+//    fout.close();
+
 }

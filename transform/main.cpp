@@ -19,13 +19,13 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl_point>::Ptr cloud(new pcl::PointCloud<pcl_point>);
     pcl::io::loadPCDFile<pcl_point>( pcd_file, *cloud );
 
-    Eigen::Matrix4f transform_rot = Eigen::Matrix4f::Identity();
     Eigen::Matrix4f transform_theta = Eigen::Matrix4f::Identity();
     Eigen::Matrix4f transform_phi = Eigen::Matrix4f::Identity();
+    Eigen::Matrix4f transform_tot = Eigen::Matrix4f::Identity();
 
     // Define a rotation matrix (see https://en.wikipedia.org/wiki/Rotation_matrix)
-    float theta =  atof(argv[2]); // The angle of rotation in radians
-    float phi=  atof(argv[3]); // The angle of rotation in radians
+    float theta =  atof(argv[2])*M_PI/180; // The angle of rotation in radians
+    float phi=  atof(argv[3])*M_PI/180; // The angle of rotation in radians
     transform_theta (0,0) = cos (theta);
     transform_theta (0,1) = -sin(theta);
     transform_theta (1,0) = sin (theta);
@@ -39,14 +39,18 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl_point>::Ptr transformed_cloud(new pcl::PointCloud<pcl_point>);
 
     Eigen::Matrix4f transform_trans = Eigen::Matrix4f::Zero();
-    transform_phi (0,3) = 0.2;
-    transform_phi (1,3) = 0.3;
-    transform_phi (2,3) = 0.1;
+    transform_phi (0,3) = 0;
+    transform_phi (1,3) = 0;
+    transform_phi (2,3) = 0;
+
 
     // Print the transformation
     std::cout << transform_theta*transform_phi+transform_trans << std::endl;
 
-    pcl::transformPointCloud (*cloud, *transformed_cloud, transform_theta*transform_phi+transform_trans);
+    transform_tot=transform_theta;
+    std::cout << transform_tot << std::endl;
+
+    pcl::transformPointCloud (*cloud, *transformed_cloud, transform_tot);
     int color[3]={20,230,20};
     display_clouds(transformed_cloud, transformed_cloud, color, color, 1, 1);
 
